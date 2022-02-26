@@ -21,3 +21,7 @@ provider "proxmox" {
 module "lxc" {
   source = "./modules/lxc"
 }
+
+module "vm_qemu" {
+  source = "./modules/vm_qemu"
+}
