@@ -25,3 +25,9 @@
         state: directory
         mode: u+rwx
 # next, upload config https://learn.hashicorp.com/tutorials/vault/getting-started-deploy?in=vault/getting-started
+# FULL TODO
+# install Vault
+# Use Vault to store secrets to use in Terraform
+# Use Terraform to install k8s
+# Use helm to install Rancher
+# Use k8s to install AWX
