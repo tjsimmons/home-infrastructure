@@ -51,5 +51,6 @@ resource "proxmox_lxc" "vault" {
     name   = "eth0"
     bridge = "vmbr2"
     ip     = "dhcp"
+    hwaddr = "CA:0E:A1:A5:53:A4"
   }
 }
