@@ -1,0 +1,75 @@
+- hosts: vault
+  become_user: root
+  become: true
+  tasks:
+    - name: modify /etc/apt/sources.list to use local cache
+      replace:
+        path: /etc/apt/sources.list
+        regexp: (http://archive)
+        replace: http://apt-repo.tjsimmons.net:3142/archive
+
+    - name: install gnupg
+      apt:
+        name: gnupg
+        update-cache: yes
+        state: present
+    - name: add Hashicorp GPG key
+      apt_key:
+        url: https://apt.releases.hashicorp.com/gpg
+        state: present
+    - name: add Hashicorp repo
+      apt_repository:
+        repo: deb [arch=amd64] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main
+    - name: install Vault, python3, and python3-pip
+      apt:
+        name: "{{ item }}"
+        update-cache: yes
+        state: present
+      loop:
+        - vault
+        - python3
+        - python3-pip
+    - name: install psutil
+      pip:
+        name: psutil
+        state: present
+    - name: copy config
+      copy:
+        src: vault-config.hcl
+        dest: /etc/vault.d/vault.hcl
+        owner: vault
+        group: vault
+        mode: u+rw
+    - name: enable and start Vault service
+      systemd:
+        name: vault
+        enabled: yes
+        state: restarted
+    - name: check for Vault initialization file
+      stat:
+        path: vault_details.txt
+      register: vault_details
+    - name: initialize Vault
+      command:
+        cmd: vault operator init
+      environment:
+        VAULT_ADDR: http://127.0.0.1:8200
+      register: vault_output
+      when: not vault_details.stat.exists
+    - name: echo vault output
+      debug:
+        msg: "{{ vault_output }}"
+    - name: save Vault init output
+      file:
+        dest: vault_details.txt
+        content: "{{ vault_output  }}"
+        owner: root
+        mode: 0600
+      when: not vault_details.stat.exists
+# next, upload config https://learn.hashicorp.com/tutorials/vault/getting-started-deploy?in=vault/getting-started
+# FULL TODO
+# ~~install Vault~~
+# Use Vault to store secrets to use in Terraform
+# Use Terraform to install k8s
+# Use helm to install Rancher
+# Use k8s to install AWX
