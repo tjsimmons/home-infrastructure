@@ -1,13 +1,13 @@
 - hosts: vault
   become_user: root
   become: true
+
   tasks:
     - name: modify /etc/apt/sources.list to use local cache
       replace:
         path: /etc/apt/sources.list
         regexp: (http://archive)
         replace: http://apt-repo.tjsimmons.net:3142/archive
-
     - name: install gnupg
       apt:
         name: gnupg
@@ -33,6 +33,13 @@
       pip:
         name: psutil
         state: present
+    - name: update config to listen on machine's IP address
+      replace:
+        path: vault-config.hcl
+        regexp: (127.0.0.1)
+        replace: "{{ ansible_default_ipv4.address }}"
+      become: no
+      delegate_to: localhost
     - name: copy config
       copy:
         src: vault-config.hcl
@@ -52,21 +59,39 @@
     - name: initialize Vault
       command:
         cmd: vault operator init
-      environment:
-        VAULT_ADDR: http://127.0.0.1:8200
       register: vault_output
       when: not vault_details.stat.exists
+      environment:
+        VAULT_ADDR: "http://{{ ansible_default_ipv4.address }}:8200"
     - name: echo vault output
       debug:
         msg: "{{ vault_output }}"
     - name: save Vault init output
-      file:
+      copy:
         dest: vault_details.txt
-        content: "{{ vault_output  }}"
+        content: "{{ vault_output.stdout  }}"
         owner: root
         mode: 0600
       when: not vault_details.stat.exists
-# next, upload config https://learn.hashicorp.com/tutorials/vault/getting-started-deploy?in=vault/getting-started
+    - name: get key details from init file
+      command:
+        cmd: cat vault_details.txt
+      register: init_details
+    - name: unseal Vault with Key 1
+      command:
+        cmd: "vault operator unseal {{ init_details.stdout_lines[0] | regex_replace('(?:Unseal Key [0-9]{1}:) (.*)', '\\1') }}"
+      environment:
+        VAULT_ADDR: "http://{{ ansible_default_ipv4.address }}:8200"
+    - name: unseal Vault with Key 2
+      command:
+        cmd: "vault operator unseal {{ init_details.stdout_lines[1] | regex_replace('(?:Unseal Key [0-9]{1}:) (.*)', '\\1') }}"
+      environment:
+        VAULT_ADDR: "http://{{ ansible_default_ipv4.address }}:8200"
+    - name: unseal Vault with Key 3
+      command:
+        cmd: "vault operator unseal {{ init_details.stdout_lines[2] | regex_replace('(?:Unseal Key [0-9]{1}:) (.*)', '\\1') }}"
+      environment:
+        VAULT_ADDR: "http://{{ ansible_default_ipv4.address }}:8200"
 # FULL TODO
 # ~~install Vault~~
 # Use Vault to store secrets to use in Terraform
