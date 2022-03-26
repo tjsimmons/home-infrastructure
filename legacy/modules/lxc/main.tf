@@ -76,31 +76,6 @@ resource "proxmox_lxc" "sonarr" {
   }
 }
 
-resource "proxmox_lxc" "apt-repo" {
-  target_node  = "bragr"
-  hostname     = "apt-repo"
-  unprivileged = false
-  onboot       = true
-  ostype       = "ubuntu"
-  arch         = "amd64"
-  cores        = 2
-  memory       = 1024
-  swap         = 1024
-
-  // Terraform will crash without rootfs defined
-  rootfs {
-    storage = "local-lvm-data-hdd"
-    size    = "600G"
-  }
-
-  network {
-    name   = "eth0"
-    bridge = "vmbr2"
-    ip     = "dhcp"
-    hwaddr = "5E:C2:E3:A3:27:4C"
-  }
-}
-
 resource "proxmox_lxc" "pihole" {
   target_node  = "bragr"
   hostname     = "pihole"

@@ -1,0 +1,25 @@
+- hosts: maas
+  become_user: root
+  become: true
+
+  tasks:
+    - name: modify /etc/apt/sources.list to use local cache
+      replace:
+        path: /etc/apt/sources.list
+        regexp: (http://archive)
+        replace: http://apt-repo.tjsimmons.net:3142/archive
+    - name: install gnupg
+      apt:
+        name: gnupg
+        update-cache: yes
+        state: present
+    - name: add MAAS repo
+      apt_repository:
+        repo: ppa:maas/3.1
+    - name: install maas
+      apt:
+        name: "{{ item }}"
+        update-cache: yes
+        state: present
+      loop:
+        - maas

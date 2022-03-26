@@ -1,0 +1,18 @@
+- hosts: apt-repo
+  become_user: root
+  become: true
+
+  tasks:
+    - name: install squid-deb-proxy
+      apt:
+        name: "{{ item }}"
+        update-cache: yes
+        state: present
+      loop:
+        - squid-deb-proxy
+    - name: remove squid service
+      systemd:
+        enabled: no
+        state: stopped
+        name: squid
+        force: yes

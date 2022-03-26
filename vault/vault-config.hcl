@@ -9,13 +9,13 @@ storage "file" {
 }
 
 #storage "consul" {
-#  address = "127.0.0.1:8500"
+#  address = "10.0.1.124:8500"
 #  path    = "vault"
 #}
 
 # HTTP listener
 #listener "tcp" {
-#  address = "127.0.0.1:8200"
+#  address = "10.0.1.124:8200"
 #  tls_disable = 1
 #}
 
@@ -52,10 +52,10 @@ listener "tcp" {
 #}
 
 #listener "tcp" {
-#  address     = "127.0.0.1:8200"
+#  address     = "10.0.1.124:8200"
 #  tls_disable = "true"
 #}
 
-#api_addr = "http://127.0.0.1:8200"
-#cluster_addr = "https://127.0.0.1:8201"
+#api_addr = "http://10.0.1.124:8200"
+#cluster_addr = "https://10.0.1.124:8201"
 #ui = true

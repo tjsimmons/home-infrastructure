@@ -36,12 +36,14 @@ resource "proxmox_lxc" "vault" {
   unprivileged    = false
   onboot          = true
   ostype          = "ubuntu"
-  ostemplate      = "dagr-nfs-proxmox:vztmpl/ubuntu-21.04-standard_21.04-1_amd64.tar.gz"
+  ostemplate      = "dagr-nfs-proxmox:vztmpl/ubuntu-20.04-standard_20.04-1_amd64.tar.gz"
   arch            = "amd64"
   cores           = 2
   memory          = 2048
   swap            = 2048
   ssh_public_keys = var.ssh_keys
+  start = true
+  
   rootfs {
     storage = "local-lvm-data-hdd"
     size    = "10G"
