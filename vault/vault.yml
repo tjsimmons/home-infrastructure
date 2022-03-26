@@ -3,11 +3,11 @@
   become: true
 
   tasks:
-    - name: modify /etc/apt/sources.list to use local cache
-      replace:
-        path: /etc/apt/sources.list
-        regexp: (http://archive)
-        replace: http://apt-repo.tjsimmons.net:3142/archive
+    - name: install squid-deb-proxy-client
+      apt:
+        name: squid-deb-proxy-client
+        state: present
+        update-cache: yes
     - name: install gnupg
       apt:
         name: gnupg
