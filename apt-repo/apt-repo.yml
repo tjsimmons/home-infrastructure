@@ -4,15 +4,15 @@
 
   tasks:
     - name: install squid-deb-proxy
-      apt:
+      ansible.builtin.apt:
         name: "{{ item }}"
-        update-cache: yes
+        update-cache: true
         state: present
       loop:
         - squid-deb-proxy
     - name: remove squid service
-      systemd:
-        enabled: no
+      ansible.builtin.systemd:
+        enabled: false
         state: stopped
         name: squid
-        force: yes
+        force: true

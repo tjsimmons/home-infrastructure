@@ -4,22 +4,44 @@
 
   tasks:
     - name: install squid-deb-proxy-client
-      apt:
+      ansible.builtin.apt:
         name: squid-deb-proxy-client
         state: present
-        update-cache: yes
-    - name: install gnupg
-      apt:
-        name: gnupg
-        update-cache: yes
+        update-cache: true
+    - name: install gnupg, pip
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        update-cache: true
         state: present
+      with_items:
+        - gnupg
+        - python3-pip
     - name: add MAAS repo
-      apt_repository:
+      ansible.builtin.apt_repository:
         repo: ppa:maas/3.1
     - name: install maas
-      apt:
+      ansible.builtin.apt:
         name: "{{ item }}"
-        update-cache: yes
+        update-cache: true
         state: present
-      loop:
+      with_items:
         - maas
+    - name: install hvac to read from Vault
+      ansible.builtin.pip:
+        name: hvac
+        state: present
+        version: latest
+    - name: get MAAS username/password from Vault
+      community.hashi_vault.vault_read:
+        auth_method: userpass
+        username: "{{ lookup('env', 'VAULT_USERNAME') }}"
+        password: "{{ lookup('env', 'VAULT_PASSWORD') }}"
+        path: kv/maas
+        url: "{{ lookup('env', 'VAULT_ADDR') }}"
+      register: maas
+    - name: check maas info
+      ansible.builtin.debug:
+        var: maas
+    - name: create MAAS admin
+      ansible.builtin.command:
+        cmd: "maas createadmin --username {{ maas.data.data.username }} --email {{ maas.data.data.email }} --password {{ maas.data.data.password }} --ssh-import {{ maas.data.data.gh }}"
