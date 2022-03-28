@@ -38,10 +38,15 @@
         password: "{{ lookup('env', 'VAULT_PASSWORD') }}"
         path: kv/maas
         url: "{{ lookup('env', 'VAULT_ADDR') }}"
+      when: ansible_local.maas is undefined
       register: maas
-    - name: check maas info
-      ansible.builtin.debug:
-        var: maas
-    - name: create MAAS admin
+    - name: initialize MAAS
       ansible.builtin.command:
-        cmd: "maas createadmin --username {{ maas.data.data.username }} --email {{ maas.data.data.email }} --password {{ maas.data.data.password }} --ssh-import {{ maas.data.data.gh }}"
+        cmd: "maas init --admin-username {{ maas.data.data.username }} --admin-email {{ maas.data.data.email }} --admin-password {{ maas.data.data.password }} --admin-ssh-import {{ maas.data.data.gh }} --rbac-url '' --candid-agent-file ''"
+      when: ansible_local.maas is undefined
+    - name: "add maas init fact to the system"
+      ansible.builtin.copy:
+        src: facts.d/maas.fact
+        dest: /etc/ansible/facts.d/
+        mode: 0600
+      when: ansible_local.maas is undefined
