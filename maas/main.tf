@@ -43,8 +43,9 @@ resource "proxmox_lxc" "maas" {
 
   network {
     name   = "eth0"
-    bridge = "vmbr2"
-    ip     = "dhcp"
+    bridge = "vmbr0"
+    ip     = "10.0.30.186/24"
+    gw = "10.0.30.1"
     hwaddr = "E6:28:AD:4F:0D:90"
   }
 }

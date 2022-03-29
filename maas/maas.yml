@@ -3,19 +3,22 @@
   become: true
 
   tasks:
+    - name: get MAAS username/password from Vault
+      ansible.builtin.set_fact:
+        maas: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=kv/maas', auth_method='userpass', username=lookup('env', 'VAULT_USERNAME'), password=lookup('env', 'VAULT_PASSWORD'), url='http://vault:8200') }}"
+      when: ansible_local.maas is undefined
     - name: install squid-deb-proxy-client
       ansible.builtin.apt:
         name: squid-deb-proxy-client
         state: present
         update-cache: true
-    - name: install gnupg, pip
+    - name: install gnupg
       ansible.builtin.apt:
         name: "{{ item }}"
         update-cache: true
         state: present
       with_items:
         - gnupg
-        - python3-pip
     - name: add MAAS repo
       ansible.builtin.apt_repository:
         repo: ppa:maas/3.1
@@ -26,23 +29,9 @@
         state: present
       with_items:
         - maas
-    - name: install hvac to read from Vault
-      ansible.builtin.pip:
-        name: hvac
-        state: present
-        version: latest
-    - name: get MAAS username/password from Vault
-      community.hashi_vault.vault_read:
-        auth_method: userpass
-        username: "{{ lookup('env', 'VAULT_USERNAME') }}"
-        password: "{{ lookup('env', 'VAULT_PASSWORD') }}"
-        path: kv/maas
-        url: "{{ lookup('env', 'VAULT_ADDR') }}"
-      when: ansible_local.maas is undefined
-      register: maas
     - name: initialize MAAS
       ansible.builtin.command:
-        cmd: "maas init --admin-username {{ maas.data.data.username }} --admin-email {{ maas.data.data.email }} --admin-password {{ maas.data.data.password }} --admin-ssh-import {{ maas.data.data.gh }} --rbac-url '' --candid-agent-file ''"
+        cmd: "maas init --admin-username {{ maas.username }} --admin-email {{ maas.email }} --admin-password {{ maas.password }} --admin-ssh-import {{ maas.gh }} --rbac-url '' --candid-agent-file ''"
       when: ansible_local.maas is undefined
     - name: "add maas init fact to the system"
       ansible.builtin.copy:
